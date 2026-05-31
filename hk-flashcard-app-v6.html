@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#5B6CFF">
+<title>HK 詞語 Flash Cards</title>
+<style>
+  :root{
+    --bg:#f3f5fb;
+    --surface:#ffffff;
+    --surface-2:#f7f8ff;
+    --ink:#1a1f3d;
+    --muted:#6b7390;
+    --line:#e6e9f5;
+    --primary:#5b6cff;
+    --primary-2:#7c8aff;
+    --success:#22b573;
+    --warning:#ff9f43;
+    --danger:#ff5c75;
+    --cyan:#3ec3f0;
+    --shadow-sm:0 4px 12px rgba(26,31,61,.06);
+    --shadow:0 10px 26px rgba(26,31,61,.10);
+    --shadow-lg:0 18px 40px rgba(26,31,61,.14);
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --tab-h:74px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    overscroll-behavior:none;
+  }
+  button{font:inherit;color:inherit;border:0;background:transparent;cursor:pointer}
+  input,select{font:inherit;color:inherit}
+
+  /* ---------- App shell ---------- */
+  #app{
+    position:fixed;inset:0;
+    display:flex;flex-direction:column;
+  }
+  .view{
+    flex:1;overflow-y:auto;overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    padding:calc(var(--safe-top) + 8px) 16px calc(var(--tab-h) + var(--safe-bottom) + 16px);
+    scroll-behavior:smooth;
+  }
+  .view::-webkit-scrollbar{display:none}
+  .view[hidden]{display:none!important}
+
+  .header{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:12px;padding:8px 0 16px;
+  }
+  .header h1{margin:0;font-size:1.6rem;font-weight:800;letter-spacing:-.01em;line-height:1.1}
+  .header .eyebrow{font-size:.78rem;color:var(--muted);font-weight:700;margin-bottom:4px;letter-spacing:.04em;text-transform:uppercase}
+  .avatar{
+    width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--primary),var(--cyan));color:#fff;font-weight:900;font-size:1.3rem;
+    box-shadow:var(--shadow);
+  }
+
+  /* ---------- Generic UI ---------- */
+  .card{
+    background:var(--surface);border-radius:20px;box-shadow:var(--shadow-sm);
+    padding:16px;
+  }
+  .card + .card{margin-top:12px}
+  .row{display:flex;align-items:center;gap:10px}
+  .row.between{justify-content:space-between}
+  .stack{display:flex;flex-direction:column;gap:8px}
+
+  .stat-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  }
+  .stat{
+    background:var(--surface);border-radius:16px;padding:12px 8px;text-align:center;
+    box-shadow:var(--shadow-sm);
+  }
+  .stat .label{font-size:.7rem;font-weight:800;color:var(--muted);margin-bottom:6px;letter-spacing:.04em}
+  .stat .value{font-size:1.25rem;font-weight:900}
+
+  .pill{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:6px 12px;border-radius:999px;
+    background:var(--surface-2);color:var(--ink);
+    font-weight:800;font-size:.82rem;
+  }
+  .pill.success{background:rgba(34,181,115,.14);color:#157a48}
+  .pill.warning{background:rgba(255,159,67,.18);color:#a55b00}
+  .pill.danger{background:rgba(255,92,117,.16);color:#aa2438}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:50px;padding:12px 14px;border-radius:14px;
+    background:var(--surface);color:var(--ink);font-weight:800;
+    box-shadow:var(--shadow-sm);
+    transition:transform .12s ease,filter .12s ease;
+  }
+  .btn:active{transform:scale(.97);filter:brightness(.97)}
+  .btn.primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));color:#fff;box-shadow:0 10px 24px rgba(91,108,255,.28)}
+  .btn.success{background:linear-gradient(135deg,#c7f5dd,#9dedc2);color:#0e6c40}
+  .btn.warning{background:linear-gradient(135deg,#ffe1bf,#ffc77a);color:#7c4a00}
+  .btn.cyan{background:linear-gradient(135deg,#cdeefc,#a5e1fa);color:#0e567a}
+  .btn.danger{background:linear-gradient(135deg,#ffd3dc,#ffa6b6);color:#8a1e30}
+  .btn.ghost{background:transparent;box-shadow:none;color:var(--muted)}
+  .btn.block{width:100%}
+
+  .seg{
+    display:flex;gap:6px;background:#eef1fb;padding:4px;border-radius:14px;
+  }
+  .seg button{
+    flex:1;padding:9px 10px;border-radius:10px;font-weight:800;font-size:.88rem;color:var(--muted);
+  }
+  .seg button.active{background:#fff;color:var(--ink);box-shadow:var(--shadow-sm)}
+
+  .search{
+    display:flex;align-items:center;gap:8px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:14px;
+    padding:0 12px;min-height:48px;
+  }
+  .search input{flex:1;border:0;background:transparent;outline:none;min-width:0;font-size:1rem}
+
+  select.input{
+    width:100%;border:1px solid var(--line);background:var(--surface-2);border-radius:14px;
+    padding:12px;font-weight:700;outline:none;-webkit-appearance:none;appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px;
+  }
+
+  /* ---------- Flash card ---------- */
+  .card-stage{perspective:1400px;margin-top:6px}
+  .flash{
+    position:relative;min-height:380px;transform-style:preserve-3d;
+    transition:transform .6s cubic-bezier(.4,.0,.2,1);
+    will-change:transform;
+  }
+  .flash.flipped{transform:rotateY(180deg)}
+  .face{
+    position:absolute;inset:0;border-radius:28px;backface-visibility:hidden;
+    background:linear-gradient(180deg,#fff,#f6f8ff);overflow:hidden;
+    border:1px solid rgba(255,255,255,.9);
+    box-shadow:var(--shadow-lg);
+    padding:18px;display:flex;flex-direction:column;justify-content:space-between;
+  }
+  .face.back{transform:rotateY(180deg);background:linear-gradient(180deg,#fffdf4,#f1fbf6)}
+  .face::before,.face::after{content:"";position:absolute;border-radius:999px;pointer-events:none}
+  .face::before{width:170px;height:170px;background:rgba(91,108,255,.10);right:-60px;top:-60px}
+  .face::after{width:150px;height:150px;background:rgba(62,195,240,.10);left:-30px;bottom:-50px}
+  .card-top,.card-bottom{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .word-zone{position:relative;z-index:1;flex:1;display:grid;place-items:center;min-height:170px;text-align:center;padding:8px}
+  .word{
+    font-size:clamp(2.4rem,11vw,4.2rem);font-weight:900;letter-spacing:.08em;line-height:1.15;
+    word-break:break-word;
+  }
+  .helper{position:relative;z-index:1;background:rgba(255,255,255,.86);border-radius:18px;padding:12px 14px;font-size:.94rem;line-height:1.6}
+  .helper strong{color:#c96a0e}
+
+  .hint{text-align:center;color:var(--muted);font-size:.78rem;font-weight:700;margin-top:10px;letter-spacing:.02em}
+
+  /* ---------- Quick action row under card ---------- */
+  .quick{
+    margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  }
+  .quick .btn{flex-direction:column;gap:2px;font-size:.82rem;padding:10px 6px;min-height:62px}
+  .quick .btn .ic{font-size:1.2rem;line-height:1}
+
+  /* ---------- Lists ---------- */
+  .progress-head{display:flex;justify-content:space-between;gap:12px;font-weight:800;font-size:.9rem;margin-bottom:8px}
+  .track{height:10px;background:#e9ecf8;border-radius:999px;overflow:hidden}
+  .fill{height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--cyan),var(--success));transition:width .25s ease;border-radius:999px}
+
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .chip{
+    border-radius:999px;background:#eef1fb;color:var(--ink);
+    padding:9px 12px;font-weight:800;font-size:.92rem;
+  }
+  .chip.known{background:rgba(34,181,115,.14);color:#157a48}
+  .chip.review{background:rgba(255,159,67,.18);color:#9b5a00}
+  .chip.active{outline:2px solid rgba(91,108,255,.32);background:#fff}
+
+  /* ---------- Camera (OCR) ---------- */
+  .ocr-drop{
+    border:2px dashed #cdd4ee;border-radius:18px;padding:18px;text-align:center;color:var(--muted);
+    background:repeating-linear-gradient(45deg,rgba(91,108,255,.04),rgba(91,108,255,.04) 8px,transparent 8px,transparent 16px);
+  }
+  .ocr-preview-wrap{margin-top:12px;border-radius:18px;overflow:hidden;background:#000;display:none}
+  .ocr-preview-wrap img{width:100%;display:block}
+  .ocr-status{
+    margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--surface-2);font-size:.88rem;color:var(--muted);font-weight:700;
+  }
+  .ocr-status.ok{color:#157a48;background:rgba(34,181,115,.10)}
+  .ocr-status.warn{color:#9b5a00;background:rgba(255,159,67,.12)}
+  .ocr-status.err{color:#aa2438;background:rgba(255,92,117,.12)}
+  .ocr-progress{height:8px;background:#e7eaf6;border-radius:999px;overflow:hidden;margin-top:8px;display:none}
+  .ocr-progress .bar{height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--cyan))}
+  .candidates{margin-top:12px}
+  .candidate{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--surface-2);border-radius:12px;padding:10px 12px;margin-top:6px;
+    border:1px solid var(--line);
+  }
+  .candidate label{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.02rem;flex:1}
+  .candidate input[type=checkbox]{width:22px;height:22px;accent-color:var(--primary)}
+  .candidate .src{font-size:.72rem;color:var(--muted);font-weight:700}
+
+  /* ---------- Tab bar ---------- */
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    padding:8px 12px calc(8px + var(--safe-bottom));
+    background:rgba(255,255,255,.86);
+    backdrop-filter:saturate(160%) blur(18px);
+    -webkit-backdrop-filter:saturate(160%) blur(18px);
+    border-top:1px solid rgba(0,0,0,.05);
+    display:grid;grid-template-columns:repeat(5,1fr);gap:4px;
+  }
+  .tab{
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 4px;border-radius:14px;color:var(--muted);font-weight:800;font-size:.72rem;
+  }
+  .tab .ic{font-size:1.32rem;line-height:1}
+  .tab.active{color:var(--primary)}
+  .tab.center .ic{
+    width:46px;height:46px;border-radius:16px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--primary),var(--cyan));color:#fff;font-size:1.4rem;
+    box-shadow:0 12px 24px rgba(91,108,255,.34);transform:translateY(-10px);
+  }
+  .tab.center.active{color:var(--primary)}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;left:50%;bottom:calc(var(--tab-h) + var(--safe-bottom) + 16px);
+    transform:translateX(-50%) translateY(20px);
+    background:rgba(26,31,61,.96);color:#fff;border-radius:999px;padding:11px 16px;
+    font-weight:800;font-size:.92rem;opacity:0;pointer-events:none;
+    transition:.22s ease;z-index:60;max-width:calc(100vw - 28px);text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .sparkle{position:fixed;width:10px;height:10px;border-radius:50%;pointer-events:none;z-index:70;animation:pop .9s ease-out forwards}
+  @keyframes pop{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--tx),var(--ty)) scale(.3);opacity:0}}
+
+  .empty{padding:20px 10px;text-align:center;color:var(--muted);font-weight:700}
+  .swipe-area{touch-action:pan-y}
+
+  /* ---------- Boot screen ---------- */
+  #boot{
+    position:fixed;inset:0;z-index:1000;display:grid;place-items:center;
+    background:linear-gradient(180deg,#eef2ff,#f4f7ff);
+    transition:opacity .35s ease;
+  }
+  #boot .b-logo{
+    width:84px;height:84px;border-radius:24px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--primary),var(--cyan));color:#fff;font-weight:900;font-size:2rem;
+    box-shadow:0 18px 40px rgba(91,108,255,.28);margin-bottom:14px;
+  }
+  #boot .b-title{font-weight:900;font-size:1.1rem}
+  #boot .b-sub{color:var(--muted);font-weight:700;font-size:.86rem;margin-top:4px}
+  #boot.gone{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+
+<!-- Boot splash -->
+<div id="boot">
+  <div style="text-align:center">
+    <div class="b-logo">字</div>
+    <div class="b-title">HK 詞語 Flash Cards</div>
+    <div class="b-sub">準備緊…</div>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ========== HOME ========== -->
+  <section class="view" id="view-home">
+    <div class="header">
+      <div>
+        <div class="eyebrow">Hong Kong • Primary Revision</div>
+        <h1>🎒 詞語 Flash Cards</h1>
+      </div>
+      <div class="avatar">字</div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="label">總詞語</div><div class="value" id="s-total">0</div></div>
+      <div class="stat"><div class="label">已識</div><div class="value" id="s-known">0</div></div>
+      <div class="stat"><div class="label">連中</div><div class="value" id="s-streak">0</div></div>
+      <div class="stat"><div class="label">星星</div><div class="value" id="s-stars">0</div></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="progress-head"><span>學習進度</span><span id="s-progress">0 / 0</span></div>
+      <div class="track"><div class="fill" id="s-fill"></div></div>
+      <div class="row" style="margin-top:14px;gap:8px">
+        <button class="btn primary block" id="go-cards">📇 開始溫習</button>
+      </div>
+      <div class="row" style="margin-top:8px;gap:8px">
+        <button class="btn cyan block" id="go-camera">📷 影相加詞語</button>
+        <button class="btn warning block" id="go-list">📚 詞語清單</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="row between" style="margin-bottom:6px">
+        <div style="font-weight:900">🔥 今日建議</div>
+        <span class="pill" id="suggest-pill">今日新詞 5</span>
+      </div>
+      <div id="suggest-list" class="chip-row"></div>
+      <button class="btn primary block" id="start-suggest" style="margin-top:12px">用以上詞語開始</button>
+    </div>
+  </section>
+
+  <!-- ========== CARDS ========== -->
+  <section class="view" id="view-cards" hidden>
+    <div class="header">
+      <div>
+        <div class="eyebrow">Flash Cards</div>
+        <h1>📇 溫習</h1>
+      </div>
+      <span class="pill" id="deck-pill">1 / 1</span>
+    </div>
+
+    <div class="card">
+      <div class="seg" id="mode-seg">
+        <button data-mode="all" class="active">全部</button>
+        <button data-mode="review">待溫習</button>
+        <button data-mode="known">已識</button>
+      </div>
+      <div class="search" style="margin-top:10px">
+        <span>🔎</span>
+        <input id="search-input" type="search" placeholder="搜尋詞語" />
+        <button id="clear-search" class="btn ghost" style="min-height:auto;padding:6px 8px">清除</button>
+      </div>
+      <div class="row" style="gap:8px;margin-top:10px">
+        <select class="input" id="order-select">
+          <option value="original">原本次序</option>
+          <option value="shuffle">隨機</option>
+        </select>
+        <select class="input" id="challenge-select">
+          <option value="mixed">挑戰：混合</option>
+          <option value="reading">挑戰：讀音</option>
+          <option value="meaning">挑戰：意思</option>
+          <option value="sentence">挑戰：造句</option>
+        </select>
+      </div>
+
+      <div style="margin-top:12px">
+        <div style="font-weight:900;font-size:.92rem;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+          ✍️ 手動加入詞語
+          <span class="pill" style="font-size:.72rem;padding:4px 8px" id="quick-add-count">已有 0 個</span>
+        </div>
+        <div class="search" style="margin-bottom:8px">
+          <span>＋</span>
+          <input id="quick-add-input" type="text" placeholder="輸入新詞語，例如：天氣、海洋…" maxlength="20" enterkeyhint="done">
+          <button id="quick-add-btn" class="btn primary" style="min-height:36px;padding:6px 12px;font-size:.88rem">加入</button>
+        </div>
+        <div style="font-size:.78rem;color:var(--muted);font-weight:700;line-height:1.5">💡 可一次過貼上多個詞語，用、，空格 或換行分隔，會自動拆開逐個加。</div>
+      </div>
+    </div>
+
+    <div class="card" style="background:transparent;box-shadow:none;padding:8px 0">
+      <div class="card-stage">
+        <div class="flash swipe-area" id="flash-card">
+          <article class="face front">
+            <div class="card-top">
+              <span class="pill" id="position-tag">1 / 1</span>
+              <span class="pill" id="status-tag">🌱 新學習</span>
+            </div>
+            <div class="word-zone"><div class="word" id="word-text">—</div></div>
+            <div class="helper">👆 先自己讀詞語，再按 <strong>翻卡</strong> 睇小挑戰。左右滑動切換上／下一張。</div>
+          </article>
+          <article class="face back">
+            <div class="card-top">
+              <span class="pill">🎯 小挑戰</span>
+              <span class="pill" id="challenge-tag">讀音</span>
+            </div>
+            <div class="helper" id="challenge-box">試讀出詞語。</div>
+            <div class="helper">💡 建議：<strong>讀 → 講意思 → 造句</strong>。完成後按「我識」儲星星。</div>
+          </article>
+        </div>
+      </div>
+      <div class="hint">左右滑動 • 點按卡片或下方翻卡</div>
+
+      <div class="quick">
+        <button class="btn" id="b-prev"><span class="ic">⬅️</span>上一張</button>
+        <button class="btn primary" id="b-flip"><span class="ic">🔄</span>翻卡</button>
+        <button class="btn" id="b-next"><span class="ic">➡️</span>下一張</button>
+        <button class="btn cyan" id="b-speak"><span class="ic">🔊</span>朗讀</button>
+        <button class="btn" id="b-random"><span class="ic">🎲</span>抽卡</button>
+        <button class="btn warning" id="b-review"><span class="ic">📝</span>再溫</button>
+        <button class="btn success" id="b-know"><span class="ic">✅</span>我識</button>
+        <button class="btn danger" id="b-delete"><span class="ic">🗑️</span>刪除</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== CAMERA / OCR ========== -->
+  <section class="view" id="view-camera" hidden>
+    <div class="header">
+      <div>
+        <div class="eyebrow">Camera • OCR</div>
+        <h1>📷 影相加詞語</h1>
+      </div>
+      <span class="pill" id="ocr-engine">繁中辨識</span>
+    </div>
+
+    <div class="card">
+      <div class="ocr-drop">
+        <div style="font-size:2rem">🖼️</div>
+        <div style="font-weight:900;margin-top:6px">用相機影低詞語表或書本</div>
+        <div style="margin-top:4px;font-size:.88rem">辨識完之後可以揀要儲存嘅詞語</div>
+        <div class="row" style="gap:8px;margin-top:12px;justify-content:center;flex-wrap:wrap">
+          <label class="btn primary" style="cursor:pointer;min-width:140px">
+            📷 開相機影相
+            <input type="file" accept="image/*" capture="environment" id="ocr-camera" style="display:none">
+          </label>
+          <label class="btn" style="cursor:pointer;min-width:140px">
+            🖼️ 從相簿選擇
+            <input type="file" accept="image/*" id="ocr-gallery" style="display:none">
+          </label>
+        </div>
+      </div>
+
+      <div class="ocr-preview-wrap" id="ocr-prev-wrap">
+        <img id="ocr-prev" alt="預覽">
+      </div>
+
+      <div class="ocr-progress" id="ocr-progress"><div class="bar" id="ocr-bar"></div></div>
+      <div class="ocr-status" id="ocr-status">未開始辨識。</div>
+
+      <div class="candidates" id="ocr-candidates"></div>
+
+      <div class="row" style="gap:8px;margin-top:12px" id="ocr-actions" hidden>
+        <button class="btn" id="ocr-toggle-all">全選 / 取消</button>
+        <button class="btn primary block" id="ocr-add-selected">加入溫習清單</button>
+      </div>
+
+      <div class="row" style="gap:8px;margin-top:8px">
+        <input class="search" id="manual-word" type="text" placeholder="手動加入單一詞語…" style="flex:1;padding-left:12px">
+        <button class="btn success" id="manual-add">＋ 加入</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:900;margin-bottom:6px">💡 小貼士</div>
+      <ul style="margin:0;padding-left:18px;line-height:1.7;color:var(--muted);font-size:.92rem">
+        <li>盡量令文字平直、光線足、唔好反光</li>
+        <li>支援繁體中文，最少 2 個字嘅詞語會優先保留</li>
+        <li>辨識後可以逐個 tick 揀，先儲入清單</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ========== WORD LIST ========== -->
+  <section class="view" id="view-list" hidden>
+    <div class="header">
+      <div>
+        <div class="eyebrow">Vocabulary</div>
+        <h1>📚 詞語清單</h1>
+      </div>
+      <span class="pill" id="list-count">0</span>
+    </div>
+
+    <div class="card">
+      <div class="search">
+        <span>🔎</span>
+        <input id="list-search" type="search" placeholder="搜尋清單…">
+      </div>
+      <div class="seg" id="list-seg" style="margin-top:10px">
+        <button data-filter="all" class="active">全部</button>
+        <button data-filter="new">新詞</button>
+        <button data-filter="review">待溫</button>
+        <button data-filter="known">已識</button>
+      </div>
+      <div id="list-chips" class="chip-row" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card">
+      <div class="row between" style="margin-bottom:6px">
+        <div style="font-weight:900">⚠️ 危險操作</div>
+      </div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <button class="btn warning block" id="reset-progress">♻️ 重設進度</button>
+        <button class="btn danger block" id="reset-all">🗑️ 清空全部詞語</button>
+        <button class="btn block" id="restore-default">📦 還原預設 53 個詞語</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== STATS ========== -->
+  <section class="view" id="view-stats" hidden>
+    <div class="header">
+      <div>
+        <div class="eyebrow">Insights</div>
+        <h1>📊 進度</h1>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat"><div class="label">總詞語</div><div class="value" id="st-total">0</div></div>
+      <div class="stat"><div class="label">新詞</div><div class="value" id="st-new">0</div></div>
+      <div class="stat"><div class="label">待溫</div><div class="value" id="st-review">0</div></div>
+      <div class="stat"><div class="label">已識</div><div class="value" id="st-known">0</div></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="progress-head"><span>完成度</span><span id="st-progress">0 / 0</span></div>
+      <div class="track"><div class="fill" id="st-fill"></div></div>
+    </div>
+
+    <div class="card">
+      <div style="font-weight:900;margin-bottom:8px">🌟 你嘅成就</div>
+      <div class="chip-row" id="achievements"></div>
+    </div>
+  </section>
+
+  <!-- ========== TAB BAR ========== -->
+  <nav class="tabbar" role="navigation">
+    <button class="tab active" data-view="home"><span class="ic">🏠</span>首頁</button>
+    <button class="tab" data-view="cards"><span class="ic">📇</span>溫習</button>
+    <button class="tab center" data-view="camera"><span class="ic">📷</span>影相</button>
+    <button class="tab" data-view="list"><span class="ic">📚</span>清單</button>
+    <button class="tab" data-view="stats"><span class="ic">📊</span>進度</button>
+  </nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================================================================
+   HK Flash Cards V5 — App-style, OCR, no localStorage dependency
+   =================================================================== */
+(function(){
+  "use strict";
+
+  // ---------- Safe storage (with in-memory fallback) ----------
+  var memory = {};
+  var Store = {
+    get: function(k){
+      try{ if(window.localStorage){ var v = window.localStorage.getItem(k); if(v!==null) return v; } }catch(e){}
+      return memory[k] !== undefined ? memory[k] : null;
+    },
+    set: function(k,v){
+      try{ if(window.localStorage){ window.localStorage.setItem(k,v); return; } }catch(e){}
+      memory[k] = v;
+    }
+  };
+
+  // ---------- Default starter pack ----------
+  var STARTER = [
+    "金屬","非金屬","刺傷","灼傷","自然現象",
+    "水蒸氣","積聚","彩虹","量度","濕滑",
+    "上端","霜凍","燃燒","防曬霜","雷暴",
+    "阻隔","降雨","透氣","提醒","宣傳",
+    "熱傳導","收縮","膨脹","刻度線","導熱體",
+    "皮膚","分辨","攝氏","華氏","保溫",
+    "摩擦","塑膠","木","廿四味","菊花茶",
+    "發電","經驗","飲涼茶","涼枕","涼蓆",
+    "電力","鋁箔紙","太陽","節約能源","炎熱",
+    "奶茶","波蘿包","地道美食","發泡膠","毛巾",
+    "視線平視","長洲太平清醮","渣打香港馬拉松"
+  ];
+
+  var KEY = "hk_flashcards_v5";
+  function loadState(){
+    var raw = Store.get(KEY);
+    var parsed = null;
+    if(raw){ try{ parsed = JSON.parse(raw); }catch(e){ parsed = null; } }
+    if(!parsed || !Array.isArray(parsed.words) || parsed.words.length === 0){
+      parsed = {
+        words: STARTER.slice(),
+        progress: {},
+        stars: 0,
+        streak: 0,
+        mode: "all",
+        search: "",
+        order: "original",
+        challengeMode: "mixed",
+        cardIndex: 0
+      };
+    } else {
+      parsed.progress = parsed.progress || {};
+      parsed.stars = parsed.stars || 0;
+      parsed.streak = parsed.streak || 0;
+      parsed.mode = parsed.mode || "all";
+      parsed.search = parsed.search || "";
+      parsed.order = parsed.order || "original";
+      parsed.challengeMode = parsed.challengeMode || "mixed";
+      parsed.cardIndex = parsed.cardIndex || 0;
+    }
+    return parsed;
+  }
+  var S = loadState();
+  function save(){ try{ Store.set(KEY, JSON.stringify(S)); }catch(e){} }
+
+  // ---------- DOM ----------
+  function $(id){ return document.getElementById(id); }
+  function $$(sel,root){ return Array.prototype.slice.call((root||document).querySelectorAll(sel)); }
+
+  // ---------- Toast / sparkle ----------
+  var toastTimer = null;
+  function toast(msg){
+    var t = $("toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 1500);
+  }
+  function burst(){
+    var colors = ['#5b6cff','#3ec3f0','#22b573','#ff9f43','#ff5c75'];
+    for(var i=0;i<14;i++){
+      var s = document.createElement('div'); s.className='sparkle';
+      s.style.left = (window.innerWidth/2 + Math.random()*40-20)+'px';
+      s.style.top = (window.innerHeight*0.6 + Math.random()*30-15)+'px';
+      s.style.background = colors[Math.floor(Math.random()*colors.length)];
+      s.style.setProperty('--tx', (Math.random()*220-110)+'px');
+      s.style.setProperty('--ty', (Math.random()*-180-30)+'px');
+      document.body.appendChild(s);
+      (function(n){ setTimeout(function(){ n.remove(); }, 900); })(s);
+    }
+  }
+
+  // ---------- Deck filtering ----------
+  var activeDeck = [];
+  function statusOf(w){ return S.progress[w] || 'new'; }
+  function statusLabel(s){ return s==='known'?'🌟 已識':s==='review'?'📝 待溫習':'🌱 新學習'; }
+  function buildDeck(){
+    var deck = S.words.slice();
+    if(S.mode==='review') deck = deck.filter(function(w){ return statusOf(w)!=='known'; });
+    if(S.mode==='known') deck = deck.filter(function(w){ return statusOf(w)==='known'; });
+    var q = (S.search||"").replace(/^\s+|\s+$/g,'');
+    if(q) deck = deck.filter(function(w){ return w.indexOf(q)!==-1; });
+    if(S.order==='shuffle'){
+      // deterministic-ish per session shuffle
+      deck.sort(function(a,b){ return hash(a) - hash(b); });
+    }
+    activeDeck = deck;
+    if(S.cardIndex >= activeDeck.length) S.cardIndex = Math.max(0, activeDeck.length-1);
+    if(S.cardIndex < 0) S.cardIndex = 0;
+  }
+  function hash(str){
+    var h = 5381; for(var i=0;i<str.length;i++){ h = ((h<<5)+h) + str.charCodeAt(i); h |= 0; }
+    return h ^ (S._seed || (S._seed = Math.floor(Math.random()*1e9)));
+  }
+
+  // ---------- Challenge ----------
+  function challengeType(word){
+    if(S.challengeMode !== 'mixed') return S.challengeMode;
+    var sum = 0; for(var i=0;i<word.length;i++) sum += word.charCodeAt(i);
+    return ['reading','meaning','sentence'][sum % 3];
+  }
+  function challengeFor(word){
+    var t = challengeType(word);
+    if(t==='reading') return {badge:'讀音', html:'🗣️ <strong>讀音任務：</strong>大聲讀出「'+word+'」兩次，再慢慢讀一次。'};
+    if(t==='meaning') return {badge:'意思', html:'💭 <strong>意思任務：</strong>試講出「'+word+'」嘅意思，或者講你喺邊度見過。'};
+    return {badge:'造句', html:'✍️ <strong>造句任務：</strong>用「'+word+'」講一句完整句子。'};
+  }
+
+  // ---------- Render ----------
+  function setText(id,v){ var el=$(id); if(el) el.textContent = v; }
+  function renderStats(){
+    var n = S.words.length;
+    var known = 0, reviewC = 0, newC = 0;
+    for(var i=0;i<n;i++){
+      var st = statusOf(S.words[i]);
+      if(st==='known') known++;
+      else if(st==='review') reviewC++;
+      else newC++;
+    }
+    var qac = $('quick-add-count'); if(qac) qac.textContent = '已有 '+n+' 個';
+    setText('s-total', n); setText('s-known', known);
+    setText('s-streak', S.streak); setText('s-stars', S.stars);
+    setText('s-progress', known+' / '+n);
+    $('s-fill').style.width = n? ((known/n)*100)+'%' : '0%';
+
+    setText('st-total', n); setText('st-new', newC);
+    setText('st-review', reviewC); setText('st-known', known);
+    setText('st-progress', known+' / '+n);
+    $('st-fill').style.width = n? ((known/n)*100)+'%' : '0%';
+
+    // Achievements
+    var ach = [];
+    if(n>=10) ach.push('📦 詞庫達 10');
+    if(n>=50) ach.push('📚 詞庫達 50');
+    if(known>=5) ach.push('⭐ 我識 5 個');
+    if(known>=20) ach.push('🌟 我識 20 個');
+    if(S.streak>=5) ach.push('🔥 連中 5');
+    if(S.stars>=20) ach.push('💎 儲到 20 粒星');
+    var box = $('achievements'); box.innerHTML = '';
+    if(!ach.length){ box.innerHTML = '<div class="empty">繼續努力，解鎖第一個成就！</div>'; }
+    else ach.forEach(function(a){
+      var c = document.createElement('div'); c.className='chip'; c.textContent=a; box.appendChild(c);
+    });
+
+    // Suggest list (5 random new/review)
+    var pool = S.words.filter(function(w){ return statusOf(w)!=='known'; });
+    pool.sort(function(){ return Math.random()-0.5; });
+    var suggest = pool.slice(0,5);
+    var sb = $('suggest-list'); sb.innerHTML='';
+    if(!suggest.length){ sb.innerHTML='<div class="empty">全部已識，叻仔！</div>'; }
+    else suggest.forEach(function(w){
+      var c=document.createElement('div'); c.className='chip'; c.textContent=w; sb.appendChild(c);
+    });
+    $('suggest-pill').textContent = '建議 '+suggest.length+' 個';
+    $('start-suggest')._words = suggest;
+  }
+
+  function renderCardView(){
+    setText('deck-pill', (activeDeck.length? (S.cardIndex+1):0)+' / '+activeDeck.length);
+    var w = activeDeck[S.cardIndex];
+    if(!w){
+      setText('word-text', S.words.length? '找不到詞語' : '清單係空嘅');
+      setText('position-tag', '0 / 0');
+      setText('status-tag', '🔎 無結果');
+      setText('challenge-tag', '—');
+      $('challenge-box').innerHTML = S.words.length? '試切換到「全部」或清除搜尋。' : '去「📷 影相」或「📚 清單」加入詞語。';
+      $('flash-card').classList.remove('flipped');
+      return;
+    }
+    var st = statusOf(w), c = challengeFor(w);
+    setText('word-text', w);
+    setText('position-tag', (S.cardIndex+1)+' / '+activeDeck.length);
+    setText('status-tag', statusLabel(st));
+    setText('challenge-tag', c.badge);
+    $('challenge-box').innerHTML = c.html;
+    $('flash-card').classList.remove('flipped'); // always start on front when re-render
+    // sync controls
+    $$('#mode-seg button').forEach(function(b){ b.classList.toggle('active', b.dataset.mode===S.mode); });
+    $('search-input').value = S.search;
+    $('order-select').value = S.order;
+    $('challenge-select').value = S.challengeMode;
+  }
+
+  function renderList(filter){
+    filter = filter || $('list-seg').querySelector('.active').dataset.filter;
+    var q = ($('list-search').value||'').replace(/^\s+|\s+$/g,'');
+    var box = $('list-chips'); box.innerHTML='';
+    var filtered = S.words.filter(function(w){
+      var st = statusOf(w);
+      if(filter==='new' && st!=='new') return false;
+      if(filter==='review' && st!=='review') return false;
+      if(filter==='known' && st!=='known') return false;
+      if(q && w.indexOf(q)===-1) return false;
+      return true;
+    });
+    setText('list-count', filtered.length+' / '+S.words.length);
+    if(!filtered.length){ box.innerHTML='<div class="empty">冇符合嘅詞語</div>'; return; }
+    filtered.forEach(function(w){
+      var st = statusOf(w);
+      var c = document.createElement('button');
+      c.className = 'chip' + (st!=='new'?' '+st:'');
+      c.textContent = w;
+      c.addEventListener('click', function(){
+        // jump to card view for this word
+        S.mode = 'all'; S.search = ''; buildDeck();
+        var idx = activeDeck.indexOf(w);
+        if(idx>=0){ S.cardIndex = idx; switchView('cards'); renderAll(); }
+      });
+      c.addEventListener('contextmenu', function(e){ e.preventDefault(); removeWord(w); });
+      box.appendChild(c);
+    });
+  }
+
+  function renderAll(){
+    buildDeck();
+    renderStats();
+    renderCardView();
+    renderList();
+    save();
+  }
+
+  // ---------- Word ops ----------
+  function addWord(word){
+    word = (word||'').replace(/^\s+|\s+$/g,'');
+    if(!word) return false;
+    if(S.words.indexOf(word)!==-1) return false;
+    S.words.push(word);
+    return true;
+  }
+  function removeWord(word){
+    var i = S.words.indexOf(word);
+    if(i===-1) return;
+    if(!window.confirm('刪除「'+word+'」？')) return;
+    S.words.splice(i,1);
+    delete S.progress[word];
+    renderAll();
+    toast('已刪除：'+word);
+  }
+  function markCurrent(status){
+    var w = activeDeck[S.cardIndex]; if(!w) return;
+    var old = statusOf(w);
+    S.progress[w] = status;
+    if(status==='known' && old!=='known'){
+      S.stars += 2; S.streak += 1; burst(); toast('🌟 加 2 粒星！');
+    } else if(status==='known'){ toast('已標記為「我識」'); }
+    else { S.streak = 0; toast('📝 加入再溫習'); }
+    // auto next
+    if(activeDeck.length>1){ S.cardIndex = (S.cardIndex+1) % activeDeck.length; }
+    renderAll();
+  }
+
+  // ---------- Card nav ----------
+  function go(d){
+    if(!activeDeck.length) return;
+    S.cardIndex = (S.cardIndex + d + activeDeck.length) % activeDeck.length;
+    $('flash-card').classList.remove('flipped');
+    renderCardView(); save();
+  }
+  function flip(){
+    if(!activeDeck.length) return;
+    $('flash-card').classList.toggle('flipped');
+  }
+  function randomCard(){
+    if(activeDeck.length<2){ toast('太少卡可以抽'); return; }
+    var idx = S.cardIndex;
+    while(idx === S.cardIndex){ idx = Math.floor(Math.random()*activeDeck.length); }
+    S.cardIndex = idx; $('flash-card').classList.remove('flipped');
+    renderCardView(); save(); toast('🎲 抽咗新卡');
+  }
+  function speak(){
+    var w = activeDeck[S.cardIndex]; if(!w) return;
+    try{
+      if(!('speechSynthesis' in window)){ toast('此裝置不支援語音'); return; }
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(w);
+      u.lang='zh-HK'; u.rate=0.85; u.pitch=1.05;
+      window.speechSynthesis.speak(u);
+    }catch(e){ toast('語音功能不可用'); }
+  }
+
+  // ---------- View switching ----------
+  function switchView(name){
+    ['home','cards','camera','list','stats'].forEach(function(v){
+      var el = $('view-'+v); if(el) el.hidden = (v!==name);
+    });
+    $$('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.view===name); });
+    // refresh per-view data
+    if(name==='list') renderList();
+    if(name==='stats') renderStats();
+    if(name==='cards') renderCardView();
+    if(name==='home') renderStats();
+    window.scrollTo(0,0);
+  }
+
+  // ---------- Touch swipe on card ----------
+  var touchX=0, touchY=0, swiping=false;
+  function bindSwipe(){
+    var card = $('flash-card');
+    card.addEventListener('touchstart', function(e){
+      touchX = e.changedTouches[0].clientX;
+      touchY = e.changedTouches[0].clientY;
+      swiping = true;
+    }, {passive:true});
+    card.addEventListener('touchend', function(e){
+      if(!swiping) return; swiping=false;
+      var dx = e.changedTouches[0].clientX - touchX;
+      var dy = e.changedTouches[0].clientY - touchY;
+      if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)){
+        if(dx<0) go(1); else go(-1);
+      }
+    });
+    card.addEventListener('click', flip);
+  }
+
+  // ---------- OCR (Tesseract.js, lazy load) ----------
+  var tesseractReady = null;
+  function loadTesseract(){
+    if(tesseractReady) return tesseractReady;
+    tesseractReady = new Promise(function(resolve, reject){
+      if(window.Tesseract){ resolve(window.Tesseract); return; }
+      var s = document.createElement('script');
+      // Use jsDelivr CDN
+      s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js";
+      s.async = true;
+      s.onload = function(){ resolve(window.Tesseract); };
+      s.onerror = function(){ reject(new Error('無法載入 OCR 引擎')); };
+      document.head.appendChild(s);
+    });
+    return tesseractReady;
+  }
+
+  function setOcrStatus(msg, type){
+    var el = $('ocr-status'); el.textContent = msg;
+    el.className = 'ocr-status' + (type?' '+type:'');
+  }
+  function setOcrProgress(p){
+    var wrap = $('ocr-progress'); var bar = $('ocr-bar');
+    if(p<=0 || p>=1){ wrap.style.display='none'; bar.style.width='0%'; return; }
+    wrap.style.display='block'; bar.style.width=(p*100).toFixed(0)+'%';
+  }
+
+  function extractCandidates(rawText){
+    // Split by common separators, clean, dedupe, prefer 2-6 chars Chinese
+    var text = (rawText||'').replace(/[\r\n\t]+/g,'\n');
+    var lines = text.split(/[\n、，,·•・\|｜／\/\\;；:：\s]+/);
+    var out = []; var seen = {};
+    for(var i=0;i<lines.length;i++){
+      var w = lines[i].replace(/[「」『』“”"'`!?！？。．\.\(\)\[\]（）【】<>《》~～@#\$%\^&\*=\+\-_]/g,'');
+      w = w.replace(/^\s+|\s+$/g,'');
+      // keep only strings with at least 1 CJK character; remove pure digits/latin
+      if(!w) continue;
+      if(!/[\u3400-\u9FFF]/.test(w)) continue;
+      if(w.length<2) continue;       // skip single char
+      if(w.length>12) continue;      // skip very long
+      // strip leading/trailing non-CJK
+      w = w.replace(/^[^\u3400-\u9FFF]+/,'').replace(/[^\u3400-\u9FFF]+$/,'');
+      if(w.length<2) continue;
+      if(seen[w]) continue;
+      seen[w] = true;
+      out.push(w);
+    }
+    return out;
+  }
+
+  function renderCandidates(list){
+    var box = $('ocr-candidates'); box.innerHTML='';
+    if(!list.length){
+      box.innerHTML = '<div class="empty">辨識唔到中文詞語，試吓再影清楚啲</div>';
+      $('ocr-actions').hidden = true;
+      return;
+    }
+    list.forEach(function(w,i){
+      var inClipNew = S.words.indexOf(w)===-1;
+      var row = document.createElement('label');
+      row.className='candidate';
+      row.innerHTML =
+        '<label><input type="checkbox" '+(inClipNew?'checked':'')+' data-word="'+w.replace(/"/g,'&quot;')+'">'+
+        '<span>'+w+'</span></label>'+
+        '<span class="src">'+(inClipNew?'新詞':'已存在')+'</span>';
+      box.appendChild(row);
+    });
+    $('ocr-actions').hidden = false;
+  }
+
+  function runOcrOnFile(file){
+    if(!file){ return; }
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      $('ocr-prev').src = ev.target.result;
+      $('ocr-prev-wrap').style.display='block';
+      setOcrStatus('正在載入辨識引擎…','warn');
+      setOcrProgress(0.02);
+      loadTesseract().then(function(T){
+        setOcrStatus('辨識中… (繁體中文)','warn');
+        return T.recognize(ev.target.result, 'chi_tra', {
+          logger: function(m){
+            if(m && typeof m.progress==='number' && m.status==='recognizing text'){
+              setOcrProgress(0.1 + m.progress*0.9);
+            } else if(m && m.status){
+              setOcrStatus(m.status, 'warn');
+            }
+          }
+        });
+      }).then(function(res){
+        setOcrProgress(0);
+        var text = (res && res.data && res.data.text) || '';
+        var cands = extractCandidates(text);
+        if(cands.length){
+          setOcrStatus('辨識完成，搵到 '+cands.length+' 個詞語。揀要加入嘅詞語。', 'ok');
+        } else {
+          setOcrStatus('辨識完成，但搵唔到合適嘅詞語。','warn');
+        }
+        renderCandidates(cands);
+      }).catch(function(err){
+        setOcrProgress(0);
+        setOcrStatus('辨識失敗：'+(err && err.message? err.message:'未知錯誤')+'（網絡可能未能載入 OCR 引擎）','err');
+      });
+    };
+    reader.onerror = function(){ setOcrStatus('讀取相片失敗','err'); };
+    reader.readAsDataURL(file);
+  }
+
+  // ---------- Boot ----------
+  function bind(){
+    // tab nav
+    $$('.tab').forEach(function(t){
+      t.addEventListener('click', function(){ switchView(t.dataset.view); });
+    });
+    // home quick nav
+    $('go-cards').addEventListener('click', function(){ switchView('cards'); });
+    $('go-camera').addEventListener('click', function(){ switchView('camera'); });
+    $('go-list').addEventListener('click', function(){ switchView('list'); });
+    $('start-suggest').addEventListener('click', function(){
+      var pool = $('start-suggest')._words || [];
+      if(!pool.length){ toast('暫時無建議'); return; }
+      S.mode='all'; S.search=''; buildDeck();
+      var idx = activeDeck.indexOf(pool[0]);
+      if(idx>=0){ S.cardIndex = idx; }
+      switchView('cards'); renderAll();
+    });
+
+    // cards view controls
+    $$('#mode-seg button').forEach(function(b){
+      b.addEventListener('click', function(){ S.mode = b.dataset.mode; S.cardIndex=0; renderAll(); });
+    });
+    $('search-input').addEventListener('input', function(e){ S.search=e.target.value||''; S.cardIndex=0; renderAll(); });
+    $('clear-search').addEventListener('click', function(){ S.search=''; S.cardIndex=0; renderAll(); });
+    $('order-select').addEventListener('change', function(e){ S.order=e.target.value; S._seed = Math.floor(Math.random()*1e9); S.cardIndex=0; renderAll(); });
+    $('challenge-select').addEventListener('change', function(e){ S.challengeMode=e.target.value; renderAll(); });
+    $('b-prev').addEventListener('click', function(){ go(-1); });
+    $('b-next').addEventListener('click', function(){ go(1); });
+    $('b-flip').addEventListener('click', flip);
+    $('b-speak').addEventListener('click', speak);
+    $('b-random').addEventListener('click', randomCard);
+    $('b-review').addEventListener('click', function(){ markCurrent('review'); });
+    $('b-know').addEventListener('click', function(){ markCurrent('known'); });
+    $('b-delete').addEventListener('click', function(){
+      var w = activeDeck[S.cardIndex]; if(!w) return;
+      removeWord(w);
+    });
+    bindSwipe();
+
+    // OCR
+    $('ocr-camera').addEventListener('change', function(e){
+      var f = e.target.files && e.target.files[0]; if(f) runOcrOnFile(f);
+      e.target.value='';
+    });
+    $('ocr-gallery').addEventListener('change', function(e){
+      var f = e.target.files && e.target.files[0]; if(f) runOcrOnFile(f);
+      e.target.value='';
+    });
+    $('ocr-toggle-all').addEventListener('click', function(){
+      var boxes = $$('#ocr-candidates input[type=checkbox]');
+      var anyOff = boxes.some(function(b){ return !b.checked; });
+      boxes.forEach(function(b){ b.checked = anyOff; });
+    });
+    $('ocr-add-selected').addEventListener('click', function(){
+      var boxes = $$('#ocr-candidates input[type=checkbox]:checked');
+      if(!boxes.length){ toast('未揀任何詞語'); return; }
+      var added = 0;
+      boxes.forEach(function(b){ if(addWord(b.dataset.word)) added++; });
+      toast(added? ('已加入 '+added+' 個詞語'):'冇新詞加入（可能已存在）');
+      $('ocr-candidates').innerHTML='';
+      $('ocr-actions').hidden = true;
+      $('ocr-prev-wrap').style.display='none';
+      setOcrStatus('未開始辨識。');
+      save(); renderAll();
+    });
+    $('manual-add').addEventListener('click', function(){
+      var v = $('manual-word').value; if(addWord(v)){ toast('已加入：'+v); $('manual-word').value=''; save(); renderAll(); } else { toast('未能加入（空白或重複）'); }
+    });
+    $('manual-word').addEventListener('keypress', function(e){
+      if(e.key==='Enter'){ e.preventDefault(); $('manual-add').click(); }
+    });
+
+    // Quick-add inside Cards view (split by separators)
+    function quickAddFromInput(){
+      var raw = ($('quick-add-input').value || '');
+      if(!raw.replace(/\s+/g,'')){ toast('請輸入詞語'); return; }
+      var parts = raw.split(/[、,，;；\s\n\r\t\/\\\|]+/);
+      var added = 0, dup = 0;
+      for(var i=0;i<parts.length;i++){
+        var p = parts[i].replace(/^\s+|\s+$/g,'');
+        if(!p) continue;
+        if(addWord(p)) added++; else dup++;
+      }
+      if(added){
+        toast('已加入 '+added+' 個詞語'+(dup? '（'+dup+' 個重複）':''));
+        $('quick-add-input').value='';
+        save(); renderAll();
+        // jump to the first newly added word
+        var pool = S.words;
+        var lastAdded = pool[pool.length-1];
+        S.search=''; S.mode='all'; buildDeck();
+        var idx = activeDeck.indexOf(lastAdded);
+        if(idx>=0){ S.cardIndex = idx; renderCardView(); save(); }
+      } else {
+        toast('未能加入（重複或空白）');
+      }
+    }
+    $('quick-add-btn').addEventListener('click', quickAddFromInput);
+    $('quick-add-input').addEventListener('keypress', function(e){
+      if(e.key==='Enter'){ e.preventDefault(); quickAddFromInput(); }
+    });
+
+    // List view
+    $('list-search').addEventListener('input', function(){ renderList(); });
+    $$('#list-seg button').forEach(function(b){
+      b.addEventListener('click', function(){
+        $$('#list-seg button').forEach(function(x){ x.classList.remove('active'); });
+        b.classList.add('active');
+        renderList(b.dataset.filter);
+      });
+    });
+    $('reset-progress').addEventListener('click', function(){
+      if(!window.confirm('重設所有「我識／待溫習」進度、星星、連中？')) return;
+      S.progress = {}; S.stars = 0; S.streak = 0;
+      toast('已重設進度'); renderAll();
+    });
+    $('reset-all').addEventListener('click', function(){
+      if(!window.confirm('清空全部詞語？無法復原（但可再「還原預設」）')) return;
+      S.words = []; S.progress = {}; S.cardIndex = 0;
+      toast('已清空清單'); renderAll();
+    });
+    $('restore-default').addEventListener('click', function(){
+      var added = 0;
+      STARTER.forEach(function(w){ if(addWord(w)) added++; });
+      toast(added? ('已加入 '+added+' 個預設詞語') : '預設詞語已存在');
+      renderAll();
+    });
+  }
+
+  function init(){
+    try{
+      bind();
+      renderAll();
+      // Hide boot
+      setTimeout(function(){
+        var b = document.getElementById('boot');
+        if(b){ b.classList.add('gone'); setTimeout(function(){ b.style.display='none'; }, 400); }
+      }, 250);
+    }catch(err){
+      var b = document.getElementById('boot');
+      if(b){ b.innerHTML = '<div style="text-align:center;padding:20px;color:#aa2438;font-weight:800">初始化錯誤<br><br>'+(err && err.message? err.message:'')+'</div>'; }
+    }
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"4edd5f8ec12a48cfa682ab8261b80a79","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
